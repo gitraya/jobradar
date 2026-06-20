@@ -1,0 +1,36 @@
+# JobRadar config. Copy to config.yaml and edit. No code changes needed.
+
+roles:                       # F3 — keep jobs matching ANY of these (case-insensitive)
+  - software engineer
+  - full stack
+  - golang
+  - react
+  - node
+
+block_terms:                 # F4 — drop jobs matching ANY of these
+  - us only
+  - us-only
+  - authorized to work in
+  - h-1b
+  - eu only
+  - visa sponsorship not
+
+sources:                     # F1 — enable/disable per board
+  remoteok: true
+  remotive: true
+  arbeitnow: true
+  jobicy: true
+
+freshness_hours: 24          # F2 — keep only jobs newer than this; 0 disables
+dedupe_across_days: true     # F6 — skip jobs already delivered (seen.json)
+rank_worldwide_first: true   # F10 — surface worldwide/anywhere roles first
+seen_path: seen.json         # where the cross-day cache is stored
+
+delivery:
+  discord:
+    enabled: true            # F7 — webhook URL from env DISCORD_WEBHOOK_URL
+  gmail:
+    enabled: false           # F8 — creds from env GMAIL_USERNAME / GMAIL_APP_PASSWORD / GMAIL_TO
+
+ai:
+  enabled: false             # F12/F13 — off until budget exists
