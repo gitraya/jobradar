@@ -31,7 +31,7 @@ sources:                     # F1 — enable/disable per board
 remotive_category: software-development  # Remotive category slug to query
 remotive_location: worldwide             # Remotive location param (a loose server-side hint)
 
-freshness_hours: 24          # F2 — keep only jobs newer than this; 0 disables
+freshness_hours: 720          # F2 — keep only jobs newer than this; 0 disables
 dedupe_across_days: true     # F6 — skip jobs already delivered (seen.json)
 rank_worldwide_first: true   # F10 — surface worldwide/anywhere roles first
 seen_path: seen.json         # where the cross-day cache is stored
