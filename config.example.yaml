@@ -27,9 +27,15 @@ locations:                   # F4 — allow-list on candidate_required_location.
 
 sources:                     # F1 — enable/disable per board
   remotive: true
+  himalayas: true
 
 remotive_category: software-development  # Remotive category slug to query
 remotive_location: worldwide             # Remotive location param (a loose server-side hint)
+
+# Himalayas has no server-side filter and is high-volume; it pages newest-first
+# and stops at the freshness cutoff. This caps how far back a single run may page
+# (each page is 20 jobs). Raise it if a wide freshness_hours misses older jobs.
+himalayas_max_jobs: 2000
 
 freshness_hours: 24          # F2 — keep only jobs newer than this; 0 disables
 dedupe_across_days: true     # F6 — skip jobs already delivered (seen.json)

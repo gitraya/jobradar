@@ -40,13 +40,20 @@ func run(configPath string, dryRun bool) error {
 		return err
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
 	defer cancel()
 	client := &http.Client{Timeout: 30 * time.Second}
 	now := time.Now().UTC()
 
+	// Sources that paginate (Himalayas) stop at the freshness cutoff so they
+	// don't walk the whole back catalogue. Zero means "no cutoff".
+	var since time.Time
+	if cfg.FreshnessHours > 0 {
+		since = now.Add(-time.Duration(cfg.FreshnessHours) * time.Hour)
+	}
+
 	// 1. Fetch + normalize from the enabled sources concurrently.
-	jobs := source.FetchAll(ctx, client, enabledSources(cfg))
+	jobs := source.FetchAll(ctx, client, enabledSources(cfg, since))
 	log.Printf("fetched %d jobs total", len(jobs))
 
 	// 2. Filters: freshness → role/keyword → location-lock → location allow-list.
@@ -95,10 +102,12 @@ func run(configPath string, dryRun bool) error {
 
 // enabledSources returns the sources switched on in config. When the config has
 // no `sources:` block at all, every source is enabled.
-func enabledSources(cfg *config.Config) []source.Source {
+func enabledSources(cfg *config.Config, since time.Time) []source.Source {
 	all := source.All(source.Options{
 		RemotiveCategory: cfg.RemotiveCategory,
 		RemotiveLocation: cfg.RemotiveLocation,
+		Since:            since,
+		HimalayasMaxJobs: cfg.HimalayasMaxJobs,
 	})
 	if len(cfg.Sources) == 0 {
 		return all

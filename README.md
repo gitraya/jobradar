@@ -9,17 +9,25 @@ See [`docs/PRD.md`](docs/PRD.md) for the full spec.
 ## How it works
 
 ```
-Remotive → normalize → filters (24h · roles · block-terms · location allow-list)
+sources → normalize → filters (24h · roles · block-terms · location allow-list)
    → dedupe (in-run + seen.json) → rank (worldwide first) → digest → deliver
 ```
 
-Source: [Remotive](https://remotive.com) — a free, no-auth API. We query its
-`software-development` category and keep only worldwide / APAC-friendly roles
-(`candidate_required_location` in worldwide, asia, apac, indonesia). The source
-seam (`internal/source`) is built so other boards can be added back later.
+Sources (free, no-auth APIs):
 
-> **Note:** Remotive's filtered feed is low-volume — often nothing is newer than
-> 24h. If a run shows no jobs, widen `freshness_hours` (e.g. `168` for a week).
+- **[Remotive](https://remotive.com)** — queried by `software-development`
+  category. Low-volume; a single call.
+- **[Himalayas](https://himalayas.app)** — `jobs/api`, newest-first and
+  high-volume, so it pages by offset and stops at the freshness cutoff
+  (`himalayas_max_jobs` bounds how far back one run pages). Empty
+  `locationRestrictions` means worldwide.
+
+Neither API filters location server-side, so the **location allow-list** keeps
+only roles open to your regions (`locations:` — worldwide, asia, apac,
+indonesia). The `internal/source` seam makes adding more boards cheap.
+
+> **Note:** if a run shows few/no jobs, widen `freshness_hours` (e.g. `168` for
+> a week) — Remotive especially is often quiet within 24h.
 
 ## Quick start
 

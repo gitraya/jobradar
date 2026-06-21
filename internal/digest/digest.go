@@ -21,12 +21,8 @@ func Markdown(jobs []job.Job, now time.Time) string {
 	}
 	fmt.Fprintf(&b, "_%d new matching role(s)._\n\n", len(jobs))
 	for _, j := range jobs {
-		loc := j.Location
-		if strings.TrimSpace(loc) == "" {
-			loc = "Worldwide"
-		}
 		fmt.Fprintf(&b, "• **[%s](%s)** — %s\n  %s · %s · %s\n",
-			j.Title, j.URL, j.Company, loc, posted(j, now), j.Source)
+			j.Title, j.URL, j.Company, displayLoc(j.Location), posted(j, now), j.Source)
 	}
 	return b.String()
 }
@@ -41,16 +37,28 @@ func HTML(jobs []job.Job, now time.Time) string {
 	}
 	fmt.Fprintf(&b, "<p><em>%d new matching role(s).</em></p>\n<ul>\n", len(jobs))
 	for _, j := range jobs {
-		loc := j.Location
-		if strings.TrimSpace(loc) == "" {
-			loc = "Worldwide"
-		}
 		fmt.Fprintf(&b, "  <li><a href=\"%s\"><strong>%s</strong></a> — %s<br>%s · %s · %s</li>\n",
 			html.EscapeString(j.URL), html.EscapeString(j.Title), html.EscapeString(j.Company),
-			html.EscapeString(loc), posted(j, now), html.EscapeString(j.Source))
+			html.EscapeString(displayLoc(j.Location)), posted(j, now), html.EscapeString(j.Source))
 	}
 	b.WriteString("</ul>\n")
 	return b.String()
+}
+
+// displayLoc renders a job's location compactly. An empty location is worldwide;
+// a long multi-country restriction (common on Himalayas) is summarized as the
+// first few regions plus a count so the digest line stays readable.
+func displayLoc(loc string) string {
+	loc = strings.TrimSpace(loc)
+	if loc == "" {
+		return "Worldwide"
+	}
+	parts := strings.Split(loc, ", ")
+	const maxParts = 3
+	if len(parts) > maxParts {
+		return fmt.Sprintf("%s +%d more", strings.Join(parts[:maxParts], ", "), len(parts)-maxParts)
+	}
+	return loc
 }
 
 // posted renders a job's age in a compact human form.

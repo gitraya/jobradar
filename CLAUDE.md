@@ -22,7 +22,7 @@ A free, self-hosted CLI that fetches fresh remote software jobs from several fre
 
 The core is a linear pipeline; build each stage so it can be toggled and tested in isolation:
 
-1. **Sources** — concurrent fetch from job-board APIs (each enable/disable-able). Currently only **Remotive** is wired (queried by `category` + `location`); RemoteOK, Arbeitnow and Jobicy were removed because their feeds were too generic/noisy. The `source.Source` interface + `source.Options` seam keeps re-adding boards cheap. Each source has its own response shape.
+1. **Sources** — concurrent fetch from job-board APIs (each enable/disable-able). Wired: **Remotive** (single call, `category`+`location`) and **Himalayas** (`jobs/api`, paged newest-first by offset, stops at `Options.Since` freshness cutoff, bounded by `himalayas_max_jobs`). RemoteOK, Arbeitnow and Jobicy were removed (feeds too generic/noisy). The `source.Source` interface + `source.Options` seam keeps adding boards cheap. Each source has its own response shape. Note: visasponsor.jobs (HTML+captcha, no JSON) and realworkfromanywhere (Supabase SPA, creds not extractable) were researched and not integrated.
 2. **Normalize** — map every source's payload into one common `Job` shape. This is the seam that lets new boards be added without touching downstream filters.
 3. **Filters** (each toggleable, applied in order): 24h freshness → role/keyword match (keep if ANY) → location-lock block (drop if ANY block-term) → location allow-list (keep only `locations:`, empty location always kept). Remotive's `candidate_required_location` feeds the allow-list since its API doesn't filter location server-side.
 4. **Dedupe** — within a run by canonical URL, and across days via `seen.json`.

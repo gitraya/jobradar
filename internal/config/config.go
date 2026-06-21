@@ -19,6 +19,7 @@ type Config struct {
 	Sources            map[string]bool // board name -> enabled
 	RemotiveCategory   string          // Remotive category slug to query
 	RemotiveLocation   string          // Remotive location param to query
+	HimalayasMaxJobs   int             // safety cap on Himalayas pagination
 	FreshnessHours     int             // 0 disables the freshness filter
 	DedupeAcrossDays   bool
 	RankWorldwideFirst bool
@@ -68,6 +69,9 @@ func Load(path string) (*Config, error) {
 		if s, ok := v.(string); ok {
 			c.RemotiveLocation = s
 		}
+	}
+	if v, ok := root["himalayas_max_jobs"]; ok {
+		c.HimalayasMaxJobs = asInt(v, c.HimalayasMaxJobs)
 	}
 	for name, v := range asMap(root["sources"]) {
 		c.Sources[name] = asBool(v)

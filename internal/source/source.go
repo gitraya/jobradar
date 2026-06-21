@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"sort"
 	"sync"
+	"time"
 
 	"github.com/gitraya/jobradar/internal/job"
 )
@@ -27,14 +28,17 @@ type Source interface {
 
 // Options carries source-specific fetch settings derived from config.
 type Options struct {
-	RemotiveCategory string // Remotive category slug, e.g. software-development
-	RemotiveLocation string // Remotive location param, e.g. worldwide
+	RemotiveCategory string    // Remotive category slug, e.g. software-development
+	RemotiveLocation string    // Remotive location param, e.g. worldwide
+	Since            time.Time // freshness cutoff for paginated sources (zero = none)
+	HimalayasMaxJobs int       // safety cap on Himalayas pagination (0 = default)
 }
 
 // All returns every known source. main enables/disables them via config.
 func All(opts Options) []Source {
 	return []Source{
 		remotive{category: opts.RemotiveCategory, location: opts.RemotiveLocation},
+		himalayas{since: opts.Since, maxJobs: opts.HimalayasMaxJobs},
 	}
 }
 
