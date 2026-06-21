@@ -1,19 +1,25 @@
 # JobRadar
 
-A free, self-hosted assistant that fetches fresh remote software jobs from
-multiple boards, filters out everything you can't actually apply to, dedupes,
-and delivers a clean daily digest to **Discord** and/or **Gmail** — no AI
-required. Built in Go with the standard library only (single static binary,
-zero dependencies). See [`docs/PRD.md`](docs/PRD.md) for the full spec.
+A free, self-hosted assistant that fetches fresh remote software jobs,
+filters out everything you can't actually apply to, dedupes, and delivers a
+clean daily digest to **Discord** and/or **Gmail** — no AI required. Built in
+Go with the standard library only (single static binary, zero dependencies).
+See [`docs/PRD.md`](docs/PRD.md) for the full spec.
 
 ## How it works
 
 ```
-sources (concurrent) → normalize → filters (24h · roles · location-lock)
+Remotive → normalize → filters (24h · roles · block-terms · location allow-list)
    → dedupe (in-run + seen.json) → rank (worldwide first) → digest → deliver
 ```
 
-Sources: RemoteOK, Remotive, Arbeitnow, Jobicy — all free, no-auth APIs.
+Source: [Remotive](https://remotive.com) — a free, no-auth API. We query its
+`software-development` category and keep only worldwide / APAC-friendly roles
+(`candidate_required_location` in worldwide, asia, apac, indonesia). The source
+seam (`internal/source`) is built so other boards can be added back later.
+
+> **Note:** Remotive's filtered feed is low-volume — often nothing is newer than
+> 24h. If a run shows no jobs, widen `freshness_hours` (e.g. `168` for a week).
 
 ## Quick start
 

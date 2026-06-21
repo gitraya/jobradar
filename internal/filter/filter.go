@@ -58,6 +58,27 @@ func BlockLocations(jobs []job.Job, blockTerms []string) []job.Job {
 	return out
 }
 
+// AllowLocations keeps only jobs whose location is acceptable: an empty
+// location (unspecified ⇒ treated as worldwide) or one matching ANY allowed
+// term (e.g. "worldwide", "anywhere", "indonesia", "asia"). This mirrors
+// RemoteOK's site-side location filter, which the API does not apply.
+// An empty allow-list disables the filter. Unlike BlockLocations it matches
+// only against the location field, not tags/title.
+func AllowLocations(jobs []job.Job, allowed []string) []job.Job {
+	terms := lower(allowed)
+	if len(terms) == 0 {
+		return jobs
+	}
+	out := jobs[:0:0]
+	for _, j := range jobs {
+		loc := strings.ToLower(strings.TrimSpace(j.Location))
+		if loc == "" || containsAny(loc, terms) {
+			out = append(out, j)
+		}
+	}
+	return out
+}
+
 func containsAny(haystack string, terms []string) bool {
 	for _, t := range terms {
 		if t != "" && strings.Contains(haystack, t) {

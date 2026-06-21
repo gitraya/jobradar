@@ -3,17 +3,29 @@ package source
 import (
 	"context"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/gitraya/jobradar/internal/job"
 )
 
-// remotive fetches https://remotive.com/api/remote-jobs.
-type remotive struct{}
+// remotive fetches https://remotive.com/api/remote-jobs, narrowed to a category
+// and location (e.g. category=software-development&location=worldwide). The
+// location param is a loose hint — Remotive still returns other regions — so
+// candidate_required_location is filtered downstream by the location allow-list.
+type remotive struct {
+	category string
+	location string
+}
 
 func (remotive) Name() string { return "remotive" }
 
 func (s remotive) Fetch(ctx context.Context, client *http.Client) ([]job.Job, error) {
+	endpoint := "https://remotive.com/api/remote-jobs"
+	if q := s.query(); q != "" {
+		endpoint += "?" + q
+	}
+
 	var resp struct {
 		Jobs []struct {
 			Title                     string   `json:"title"`
@@ -24,7 +36,7 @@ func (s remotive) Fetch(ctx context.Context, client *http.Client) ([]job.Job, er
 			Tags                      []string `json:"tags"`
 		} `json:"jobs"`
 	}
-	if err := getJSON(ctx, client, "https://remotive.com/api/remote-jobs", &resp); err != nil {
+	if err := getJSON(ctx, client, endpoint, &resp); err != nil {
 		return nil, err
 	}
 	jobs := make([]job.Job, 0, len(resp.Jobs))
@@ -45,4 +57,15 @@ func (s remotive) Fetch(ctx context.Context, client *http.Client) ([]job.Job, er
 		})
 	}
 	return jobs, nil
+}
+
+func (s remotive) query() string {
+	v := url.Values{}
+	if s.category != "" {
+		v.Set("category", s.category)
+	}
+	if s.location != "" {
+		v.Set("location", s.location)
+	}
+	return v.Encode()
 }

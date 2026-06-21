@@ -25,13 +25,16 @@ type Source interface {
 	Fetch(ctx context.Context, client *http.Client) ([]job.Job, error)
 }
 
+// Options carries source-specific fetch settings derived from config.
+type Options struct {
+	RemotiveCategory string // Remotive category slug, e.g. software-development
+	RemotiveLocation string // Remotive location param, e.g. worldwide
+}
+
 // All returns every known source. main enables/disables them via config.
-func All() []Source {
+func All(opts Options) []Source {
 	return []Source{
-		remoteOK{},
-		remotive{},
-		arbeitnow{},
-		jobicy{},
+		remotive{category: opts.RemotiveCategory, location: opts.RemotiveLocation},
 	}
 }
 

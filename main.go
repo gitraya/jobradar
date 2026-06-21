@@ -49,10 +49,11 @@ func run(configPath string, dryRun bool) error {
 	jobs := source.FetchAll(ctx, client, enabledSources(cfg))
 	log.Printf("fetched %d jobs total", len(jobs))
 
-	// 2. Filters: freshness → role/keyword → location-lock.
+	// 2. Filters: freshness → role/keyword → location-lock → location allow-list.
 	jobs = filter.Fresh(jobs, cfg.FreshnessHours, now)
 	jobs = filter.Roles(jobs, cfg.Roles)
 	jobs = filter.BlockLocations(jobs, cfg.BlockTerms)
+	jobs = filter.AllowLocations(jobs, cfg.Locations)
 	log.Printf("%d jobs after filters", len(jobs))
 
 	// 3. Dedupe within the run, then optionally across days.
@@ -95,7 +96,10 @@ func run(configPath string, dryRun bool) error {
 // enabledSources returns the sources switched on in config. When the config has
 // no `sources:` block at all, every source is enabled.
 func enabledSources(cfg *config.Config) []source.Source {
-	all := source.All()
+	all := source.All(source.Options{
+		RemotiveCategory: cfg.RemotiveCategory,
+		RemotiveLocation: cfg.RemotiveLocation,
+	})
 	if len(cfg.Sources) == 0 {
 		return all
 	}

@@ -45,6 +45,27 @@ func TestRoles(t *testing.T) {
 	}
 }
 
+func TestAllowLocations(t *testing.T) {
+	jobs := []job.Job{
+		{Title: "A", Location: "Worldwide"},
+		{Title: "B", Location: "Washington, United States"},
+		{Title: "C", Location: ""}, // unspecified ⇒ kept
+		{Title: "D", Location: "Jakarta, Indonesia"},
+	}
+	got := AllowLocations(jobs, []string{"worldwide", "indonesia"})
+	if len(got) != 3 {
+		t.Fatalf("AllowLocations kept %d, want 3: %+v", len(got), got)
+	}
+	for _, j := range got {
+		if j.Title == "B" {
+			t.Fatalf("AllowLocations should have dropped the US-only job")
+		}
+	}
+	if n := len(AllowLocations(jobs, nil)); n != 4 {
+		t.Fatalf("empty allow-list should disable filter, kept %d, want 4", n)
+	}
+}
+
 func TestBlockLocations(t *testing.T) {
 	got := BlockLocations(sample(), []string{"us only"})
 	for _, j := range got {

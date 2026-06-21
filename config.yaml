@@ -1,13 +1,17 @@
 # JobRadar config. Copy to config.yaml and edit. No code changes needed.
 
-roles:                       # F3 — keep jobs matching ANY of these (case-insensitive)
-  - software engineer
+roles:                       # F3 — keep jobs matching ANY of these (case-insensitive).
+  - software engineer        #      Remotive's category filter is loose (it still returns
+  - developer                #      sales/writing roles), so this narrows to actual dev work.
+  - backend
+  - frontend
+  - front end
   - full stack
   - golang
   - react
   - node
 
-block_terms:                 # F4 — drop jobs matching ANY of these
+block_terms:                 # F4 — drop jobs matching ANY of these (title/location/tags)
   - us only
   - us-only
   - authorized to work in
@@ -15,11 +19,17 @@ block_terms:                 # F4 — drop jobs matching ANY of these
   - eu only
   - visa sponsorship not
 
+locations:                   # F4 — allow-list on candidate_required_location. Keep only these
+  - worldwide                #      (substring match); an empty location is always kept.
+  - asia                     #      Empty list disables the filter.
+  - apac
+  - indonesia
+
 sources:                     # F1 — enable/disable per board
-  remoteok: true
   remotive: true
-  arbeitnow: true
-  jobicy: true
+
+remotive_category: software-development  # Remotive category slug to query
+remotive_location: worldwide             # Remotive location param (a loose server-side hint)
 
 freshness_hours: 24          # F2 — keep only jobs newer than this; 0 disables
 dedupe_across_days: true     # F6 — skip jobs already delivered (seen.json)

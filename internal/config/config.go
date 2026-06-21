@@ -15,7 +15,10 @@ import (
 type Config struct {
 	Roles              []string
 	BlockTerms         []string
+	Locations          []string        // F4 allow-list: keep only these locations (empty = keep all)
 	Sources            map[string]bool // board name -> enabled
+	RemotiveCategory   string          // Remotive category slug to query
+	RemotiveLocation   string          // Remotive location param to query
 	FreshnessHours     int             // 0 disables the freshness filter
 	DedupeAcrossDays   bool
 	RankWorldwideFirst bool
@@ -50,9 +53,22 @@ func Load(path string) (*Config, error) {
 		DedupeAcrossDays:   true,
 		RankWorldwideFirst: true,
 		SeenPath:           "seen.json",
+		RemotiveCategory:   "software-development",
+		RemotiveLocation:   "worldwide",
 	}
 	c.Roles = strSlice(root["roles"])
 	c.BlockTerms = strSlice(root["block_terms"])
+	c.Locations = strSlice(root["locations"])
+	if v, ok := root["remotive_category"]; ok {
+		if s, ok := v.(string); ok && s != "" {
+			c.RemotiveCategory = s
+		}
+	}
+	if v, ok := root["remotive_location"]; ok {
+		if s, ok := v.(string); ok {
+			c.RemotiveLocation = s
+		}
+	}
 	for name, v := range asMap(root["sources"]) {
 		c.Sources[name] = asBool(v)
 	}
