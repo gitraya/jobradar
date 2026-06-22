@@ -15,17 +15,21 @@ FROM alpine:3.20
 # tzdata: lets you set TZ if you ever want non-UTC scheduling.
 RUN apk add --no-cache ca-certificates tzdata \
  && adduser -D -u 10001 jobradar \
- && mkdir -p /app \
- && chown jobradar:jobradar /app
+ && mkdir -p /app /data \
+ && chown jobradar:jobradar /app /data
 
 COPY --from=build /out/jobradar /usr/local/bin/jobradar
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Bake the committed config as a default so the image runs without a bind mount
+# (handy on Coolify); a compose bind mount over /app/config.yaml still wins.
+COPY config.yaml /app/config.yaml
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
 WORKDIR /app
 USER jobradar
 
-# Config is bind-mounted here; seen.json is written next to it (a named volume).
-ENV CONFIG=/app/config.yaml
+# Config path, and a persistent cross-day cache on the /data volume.
+ENV CONFIG=/app/config.yaml \
+    SEEN_PATH=/data/seen.json
 
 ENTRYPOINT ["docker-entrypoint.sh"]

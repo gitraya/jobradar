@@ -75,7 +75,27 @@ The container has two modes (see `docker-compose.yml` / `docker-entrypoint.sh`):
   ```
 
 `config.yaml` is bind-mounted read-only — edit it on the host, no rebuild needed.
-The image is a single static binary on Alpine (stdlib only, no deps).
+The image is a single static binary on Alpine (stdlib only, no deps). `seen.json`
+persists in the `/data` volume (`SEEN_PATH=/data/seen.json`).
+
+### Coolify
+
+JobRadar deploys on [Coolify](https://coolify.io) as a **Docker Compose** resource:
+
+1. **New Resource → Docker Compose**, point it at this Git repo (it uses the
+   committed `docker-compose.yml`). The image bakes `config.yaml`, so no host
+   bind is required.
+2. In **Environment Variables**, set your secrets and schedule:
+   `DISCORD_WEBHOOK_URL`, optionally `GMAIL_USERNAME` / `GMAIL_APP_PASSWORD` /
+   `GMAIL_TO`, and `RUN_AT` (UTC, e.g. `01:00`). Compose interpolates these in.
+3. The `jobradar_state` volume keeps `seen.json` across redeploys — Coolify
+   persists named volumes automatically.
+4. **Deploy.** The container stays up and runs daily at `RUN_AT` (watch
+   **Logs**). To change `roles`/`locations`, edit `config.yaml`, push, redeploy.
+
+The container self-schedules via `RUN_AT`, so you don't need Coolify's own
+Scheduled Tasks. Use `RUN_ON_START=true` (or temporarily set `RUN_AT` to a
+minute from now) if you want to trigger a run immediately to verify delivery.
 
 ## Scheduled runs on GitHub Actions (free)
 

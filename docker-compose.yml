@@ -3,21 +3,24 @@ services:
     build: .
     image: jobradar:latest
     container_name: jobradar
-    # Secrets: DISCORD_WEBHOOK_URL, GMAIL_USERNAME, GMAIL_APP_PASSWORD, GMAIL_TO
-    env_file:
-      - .env
+    # Options & secrets. Locally these interpolate from ./.env automatically;
+    # on Coolify set them in the resource's Environment Variables UI.
+    # RUN_AT enables daily daemon mode (UTC); clear it to run once and exit.
     environment:
-      # Daemon mode: run every day at this UTC time. Comment out / unset RUN_AT
-      # to run once and exit instead (drive it with host cron).
-      RUN_AT: "01:00"
-      RUN_ON_START: "false"
-      # DRY_RUN: "true"   # uncomment to test without delivering
+      RUN_AT: ${RUN_AT:-01:00}
+      RUN_ON_START: ${RUN_ON_START:-false}
+      DRY_RUN: ${DRY_RUN:-false}
+      SEEN_PATH: /data/seen.json
+      DISCORD_WEBHOOK_URL: ${DISCORD_WEBHOOK_URL:-}
+      GMAIL_USERNAME: ${GMAIL_USERNAME:-}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD:-}
+      GMAIL_TO: ${GMAIL_TO:-}
     volumes:
-      # Your config, read-only. Edit on the host; no rebuild needed.
+      # Edit config on the host; no rebuild needed. (The image also bakes a copy,
+      # so on Coolify you can drop this bind and just redeploy to change config.)
       - ./config.yaml:/app/config.yaml:ro
-      # Persistent cross-day cache (seen.json) lives in this named volume so it
-      # survives restarts. config.yaml's seen_path stays the default "seen.json".
-      - jobradar_state:/app
+      # Cross-day cache (seen.json) on a persistent named volume.
+      - jobradar_state:/data
     restart: unless-stopped
 
 volumes:

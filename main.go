@@ -26,18 +26,24 @@ const seenMaxAge = 30 * 24 * time.Hour
 func main() {
 	configPath := flag.String("config", "config.yaml", "path to the config file")
 	dryRun := flag.Bool("dry-run", false, "print the digest to stdout; do not deliver or persist")
+	seenPath := flag.String("seen", "", "override the config's seen_path (cross-day cache location)")
 	flag.Parse()
 
 	log.SetFlags(0)
-	if err := run(*configPath, *dryRun); err != nil {
+	if err := run(*configPath, *dryRun, *seenPath); err != nil {
 		log.Fatalf("jobradar: %v", err)
 	}
 }
 
-func run(configPath string, dryRun bool) error {
+func run(configPath string, dryRun bool, seenPath string) error {
 	cfg, err := config.Load(configPath)
 	if err != nil {
 		return err
+	}
+	// A -seen override lets a container point the cache at a persistent volume
+	// (e.g. /data/seen.json) without editing the committed config.
+	if seenPath != "" {
+		cfg.SeenPath = seenPath
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)

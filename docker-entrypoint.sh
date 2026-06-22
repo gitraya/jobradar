@@ -8,6 +8,7 @@
 #
 # Env:
 #   CONFIG        path to the config file (default /app/config.yaml)
+#   SEEN_PATH     where to persist the cross-day cache (default /data/seen.json)
 #   RUN_AT        "HH:MM" (UTC) — enables daemon mode when set
 #   RUN_ON_START  "true" to also run immediately on container start (daemon mode)
 #   DRY_RUN       "true" to pass -dry-run (fetch + print, deliver nothing)
@@ -16,6 +17,7 @@ set -eu
 
 CONFIG="${CONFIG:-/app/config.yaml}"
 ARGS="-config $CONFIG"
+[ -n "${SEEN_PATH:-}" ] && ARGS="$ARGS -seen $SEEN_PATH"
 [ "${DRY_RUN:-false}" = "true" ] && ARGS="$ARGS -dry-run"
 
 run() {

@@ -5,6 +5,7 @@ package dedupe
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/gitraya/jobradar/internal/job"
@@ -80,11 +81,17 @@ func (s *Seen) Prune(maxAge time.Duration, now time.Time) {
 	}
 }
 
-// Save writes the cache back to disk as indented JSON.
+// Save writes the cache back to disk as indented JSON, creating the parent
+// directory if needed (e.g. a freshly-mounted /data volume).
 func (s *Seen) Save() error {
 	raw, err := json.MarshalIndent(s.entries, "", "  ")
 	if err != nil {
 		return err
+	}
+	if dir := filepath.Dir(s.path); dir != "" && dir != "." {
+		if err := os.MkdirAll(dir, 0o755); err != nil {
+			return err
+		}
 	}
 	return os.WriteFile(s.path, append(raw, '\n'), 0o644)
 }
