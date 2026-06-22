@@ -54,7 +54,30 @@ All behaviour is config-driven (`config.yaml`) — no code edits for normal use.
 Every source, filter, and delivery channel is independently toggleable. See
 [`config.example.yaml`](config.example.yaml) for the annotated, complete set.
 
-## Scheduled runs (free)
+## Run on a server (Docker)
+
+```bash
+cp .env.example .env          # fill in DISCORD_WEBHOOK_URL / GMAIL_* secrets
+cp config.example.yaml config.yaml   # edit roles / locations / sources
+docker compose up -d --build  # daemon: runs daily at RUN_AT (UTC) in compose
+docker compose logs -f        # watch runs
+```
+
+The container has two modes (see `docker-compose.yml` / `docker-entrypoint.sh`):
+
+- **Daemon** — set `RUN_AT="01:00"` (UTC); the container stays up and runs once
+  a day. This is the compose default. `seen.json` persists in the `jobradar_state`
+  named volume across restarts.
+- **Run once** — unset `RUN_AT` and drive it from host cron / a systemd timer:
+  ```bash
+  docker compose run --rm jobradar           # one delivery
+  DRY_RUN=true docker compose run --rm jobradar   # fetch + print, deliver nothing
+  ```
+
+`config.yaml` is bind-mounted read-only — edit it on the host, no rebuild needed.
+The image is a single static binary on Alpine (stdlib only, no deps).
+
+## Scheduled runs on GitHub Actions (free)
 
 [`.github/workflows/digest.yml`](.github/workflows/digest.yml) runs the binary
 daily on GitHub Actions cron and commits the updated `seen.json` back to the
