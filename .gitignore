@@ -1,3 +1,4 @@
 # Built binary
 /jobradar
 .env
+seen.json
