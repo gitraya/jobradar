@@ -3,10 +3,14 @@ name: daily-digest
 on:
   schedule:
     - cron: "0 1 * * *" # 01:00 UTC daily (~08:00 WIB)
-  workflow_dispatch: {}    # allow manual runs from the Actions tab
+  workflow_dispatch: {}
 
 permissions:
-  contents: write          # to commit the updated seen.json back
+  contents: read
+
+concurrency:
+  group: jobradar-daily-digest
+  cancel-in-progress: false
 
 jobs:
   digest:
@@ -18,6 +22,14 @@ jobs:
         with:
           go-version: "1.26"
 
+      - name: Restore seen cache
+        uses: actions/cache@v4
+        with:
+          path: seen.json
+          key: jobradar-seen-${{ github.run_id }}
+          restore-keys: |
+            jobradar-seen-
+
       - name: Run JobRadar
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
@@ -26,13 +38,7 @@ jobs:
           GMAIL_TO: ${{ secrets.GMAIL_TO }}
         run: go run . -config config.yaml
 
-      - name: Commit updated seen cache
+      - name: Debug seen.json
+        if: always()
         run: |
-          if [[ -n "$(git status --porcelain seen.json)" ]]; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add seen.json
-            git commit -m "chore: update seen.json [skip ci]"
-            git pull --rebase origin master
-            git push
-          fi
+          ls -la seen.json && wc -l seen.json || echo "seen.json NOT FOUND"
